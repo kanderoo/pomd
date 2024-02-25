@@ -1,7 +1,9 @@
-use std::{io, sync::mpsc, time::Duration};
+use std::{io, process::exit, sync::mpsc, time::Duration};
 
 use clap::Parser;
 use config::Config;
+use crossterm::event::{KeyCode, ModifierKeyCode};
+use key_listener::KeyListener;
 
 use crate::event::Event;
 
@@ -10,6 +12,7 @@ mod timer;
 mod event;
 mod tui;
 mod config;
+mod key_listener;
 
 struct State {
     remaining_time: Duration,
@@ -35,6 +38,7 @@ fn main() {
         paused: false
     };
     
+    
     let mut tui = tui::Tui::new(io::stdout());
 
     let (tx, rx) = mpsc::channel();
@@ -43,6 +47,9 @@ fn main() {
     let timer = timer::Timer::new(tx.clone(), Duration::from_secs(1));
     timer.start();
 
+    let key_listener = KeyListener::new(tx.clone());
+    key_listener.start();
+
     loop {
         tui.display_tui(&state);
 
@@ -50,15 +57,34 @@ fn main() {
 
         match event {
             Event::TimerTick => {
-                state.remaining_time -= Duration::from_secs(1);
-                if state.remaining_time.is_zero() {
-                    next_phase(&mut state, &config);
+                if !state.paused {
+                    state.remaining_time -= Duration::from_secs(1);
+                    if state.remaining_time.is_zero() {
+                        next_phase(&mut state, &config);
+                    }
                 }
+            },
+            Event::KeyEvent(event) => {
+                if perform_key_action(event.code, &mut state) {
+                    break;
+                } 
             }
         }
     }
 }
 
+fn perform_key_action(code: KeyCode, state: &mut State) -> bool {
+    match code {
+        KeyCode::Char('q') => {
+            return true
+        },
+        KeyCode::Char(' ') => {
+            state.paused = !state.paused;
+        },
+        _ => ()
+    }
+    false
+}
 
 fn next_phase(state: &mut State, config: &Config) {
     match state.pom_phase {

@@ -1,4 +1,4 @@
-use std::{sync::mpsc::Sender, thread::{self, sleep, JoinHandle}, time::Duration};
+use std::{io::stdout, sync::mpsc::Sender, thread::{self, sleep, JoinHandle}, time::Duration};
 
 use crate::event::Event;
 
@@ -22,7 +22,7 @@ impl Timer {
                 sleep(self.interval);
                 match self.tx.send(Event::TimerTick) {
                     Ok(x) => x,
-                    Err(e) => eprintln!("Could not send timer tick event! {}", e)
+                    Err(e) => println!("Could not send timer tick event! {}", e)
                 }
             }
         })
