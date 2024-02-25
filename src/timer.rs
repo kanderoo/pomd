@@ -1,4 +1,4 @@
-use std::{io::stdout, sync::mpsc::Sender, thread::{self, sleep, JoinHandle}, time::Duration};
+use std::{sync::mpsc::Sender, thread::{self, sleep, JoinHandle}, time::Duration};
 
 use crate::event::Event;
 

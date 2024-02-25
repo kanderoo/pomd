@@ -1,8 +1,8 @@
-use std::{io, process::exit, sync::mpsc, time::Duration};
+use std::{io, sync::mpsc, time::Duration};
 
 use clap::Parser;
 use config::Config;
-use crossterm::event::{KeyCode, ModifierKeyCode};
+use crossterm::event::KeyCode;
 use key_listener::KeyListener;
 
 use crate::event::Event;
@@ -28,14 +28,15 @@ enum PomodoroPhase {
 }
 
 fn main() {
-    let _args = cli::Args::parse();
-    let config = Config::default();
+    let args = cli::Args::parse();
+    let mut config = Config::default();
+    config.integrate_args(args);
 
     let mut state = State {
         remaining_time: config.work_duration,
-        pom_count: 0,
+        pom_count: 1,
         pom_phase: PomodoroPhase::Work,
-        paused: false
+        paused: true
     };
     
     
@@ -51,7 +52,7 @@ fn main() {
     key_listener.start();
 
     loop {
-        tui.display_tui(&state);
+        tui.display_tui(&state, &config);
 
         let event = eh.poll_event();
 
@@ -65,7 +66,8 @@ fn main() {
                 }
             },
             Event::KeyEvent(event) => {
-                if perform_key_action(event.code, &mut state) {
+                if perform_key_action(event.code, &mut state, &config) {
+                    // TODO: make this.... not garbage
                     break;
                 } 
             }
@@ -73,14 +75,19 @@ fn main() {
     }
 }
 
-fn perform_key_action(code: KeyCode, state: &mut State) -> bool {
+fn perform_key_action(code: KeyCode, state: &mut State, config: &Config) -> bool {
     match code {
-        KeyCode::Char('q') => {
-            return true
+        KeyCode::Char('q') => return true,
+        KeyCode::Char('<') => {
+            match state.pom_phase {
+                PomodoroPhase::Work => state.remaining_time = config.work_duration,
+                PomodoroPhase::Break => state.remaining_time = config.short_break_duration,
+                PomodoroPhase::LongBreak => state.remaining_time = config.long_break_duration
+            }
+            state.paused = true;
         },
-        KeyCode::Char(' ') => {
-            state.paused = !state.paused;
-        },
+        KeyCode::Char('>') => next_phase(state, config),
+        KeyCode::Char(' ') => state.paused = !state.paused,
         _ => ()
     }
     false
@@ -89,7 +96,7 @@ fn perform_key_action(code: KeyCode, state: &mut State) -> bool {
 fn next_phase(state: &mut State, config: &Config) {
     match state.pom_phase {
         PomodoroPhase::Work => {
-            if state.pom_count == 4 {
+            if state.pom_count == config.poms_till_long_break {
                 state.pom_phase = PomodoroPhase::LongBreak;
                 state.remaining_time = config.long_break_duration;
             } else {
@@ -98,9 +105,14 @@ fn next_phase(state: &mut State, config: &Config) {
             }
             state.pom_count += 1;
         },
-        PomodoroPhase::Break | PomodoroPhase::LongBreak => {
+        PomodoroPhase::Break => {
             state.pom_phase = PomodoroPhase::Work;
             state.remaining_time = config.work_duration;
+        },
+        PomodoroPhase::LongBreak => {
+            state.pom_phase = PomodoroPhase::Work;
+            state.remaining_time = config.work_duration;
+            state.pom_count = 1;
         }
     }
     state.paused = true;

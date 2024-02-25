@@ -1,6 +1,6 @@
 use std::sync::mpsc::Receiver;
 
-use crossterm::event::{KeyCode, KeyEvent};
+use crossterm::event::KeyEvent;
 
 pub enum Event {
     TimerTick,

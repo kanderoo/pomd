@@ -1,7 +1,7 @@
-use std::io::Stdout;
+use std::io::{Stdout, Write};
 use crossterm::{cursor, execute, terminal::{self, disable_raw_mode, enable_raw_mode}};
 
-use crate::{PomodoroPhase, State};
+use crate::{config::Config, PomodoroPhase, State};
 
 pub struct Tui {
     stdout: Stdout
@@ -16,7 +16,7 @@ impl Tui {
         }
     }
 
-    pub fn display_tui(&mut self, state: &State) {
+    pub fn display_tui(&mut self, state: &State, config: &Config) {
         execute!(self.stdout, terminal::Clear(terminal::ClearType::All)).unwrap();
         execute!(self.stdout, cursor::MoveTo(0, 0)).unwrap();
 
@@ -28,22 +28,24 @@ impl Tui {
         execute!(self.stdout, cursor::MoveTo(0, 1)).unwrap();
         // write state
         match state.pom_phase {
-            PomodoroPhase::Work => println!("Working:"),
-            PomodoroPhase::Break => println!("Short Break:"),
-            PomodoroPhase::LongBreak => println!("Long Break:")
+            PomodoroPhase::Work => print!("🍅 Working ({}/{})", state.pom_count, config.poms_till_long_break),
+            PomodoroPhase::Break => print!("☕ Short Break"),
+            PomodoroPhase::LongBreak => print!("😴 Long Break")
         };
         
         execute!(self.stdout, cursor::MoveTo(0, 2)).unwrap();
-        println!("{:02}:{:02}", state.remaining_time.as_secs() / 60, state.remaining_time.as_secs() % 60);
+        print!("{:02}:{:02}", state.remaining_time.as_secs() / 60, state.remaining_time.as_secs() % 60);
 
         execute!(self.stdout, cursor::MoveTo(0, 3)).unwrap();
-        println!("Press [q] to quit, [space] to pause");
+        print!("Press [q] to quit, [space] to pause/unpause, [>] to skip current phase, [<] to restart timer");
+
+        self.stdout.flush().unwrap();
     }
     
     pub fn cleanup(&self) {
         execute!(&self.stdout, cursor::Show).unwrap();
         execute!(&self.stdout, cursor::MoveToNextLine(1)).unwrap();
-        println!("Goodbye!");
+        print!("Goodbye!");
         execute!(&self.stdout, cursor::MoveToNextLine(1)).unwrap();
         disable_raw_mode().expect("Cannot disable raw mode");
     }
