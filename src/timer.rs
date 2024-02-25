@@ -1,36 +1,30 @@
-use std::{time::{Instant, Duration}, fmt};
+use std::{sync::mpsc::Sender, thread::{self, sleep, JoinHandle}, time::Duration};
 
+use crate::event::Event;
+
+// waits for an interval, then sends a TimerTick event
 pub struct Timer {
-    length: Duration,
-    start: Instant
+    interval: Duration,
+    tx: Sender<Event>,
 }
 
 impl Timer {
-    pub fn new(length: Duration) -> Self{
-        Timer {
-            length,
-            start: Instant::now()
+    pub fn new(tx: Sender<Event>, interval: Duration) -> Self {
+        Self {
+            tx,
+            interval
         }
     }
-    
-    pub fn is_complete(&self) -> bool {
-        self.start.elapsed().as_secs() >= self.length.as_secs()
-    }
-}
 
-impl fmt::Display for Timer {
-    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), std::fmt::Error> {
-        let elapsed_minutes: u64 = self.start.elapsed().as_secs() / 60;
-        let elapsed_seconds: u64 = self.start.elapsed().as_secs() % 60;
-
-        let length_minutes: u64 = self.start.elapsed().as_secs() / 60;
-        let length_seconds: u64 = self.start.elapsed().as_secs() % 60;
-
-        write!(f, "{:02}:{:02}/{:02}:{:02}",
-            elapsed_minutes,
-            elapsed_seconds,
-            length_minutes,
-            length_seconds
-        )
+    pub fn start(self) -> JoinHandle<()> {
+        thread::spawn(move || {
+            loop {
+                sleep(self.interval);
+                match self.tx.send(Event::TimerTick) {
+                    Ok(x) => x,
+                    Err(e) => eprintln!("Could not send timer tick event! {}", e)
+                }
+            }
+        })
     }
 }

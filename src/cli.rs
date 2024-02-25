@@ -1,16 +1,6 @@
-use clap::{Parser, Subcommand};
+use clap::Parser;
 
 #[derive(Parser)]
 pub struct Args {
     no_cat: Option<bool>
-    // #[command(subcommand)]
-    // pub command: Command
-}
-
-#[derive(Subcommand)]
-pub enum Command {
-    Start,
-    Status,
-    Stop,
-    Pause
 }
