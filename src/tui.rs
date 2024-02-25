@@ -1,5 +1,5 @@
 use std::io::Stdout;
-use crossterm::{execute, terminal};
+use crossterm::{cursor, execute, terminal};
 
 use crate::{PomodoroPhase, State};
 
@@ -15,7 +15,8 @@ impl Tui {
     }
 
     pub fn display_tui(&mut self, state: &State) {
-        execute!(self.stdout, terminal::Clear(terminal::ClearType::All));
+        execute!(self.stdout, terminal::Clear(terminal::ClearType::All)).unwrap();
+        execute!(self.stdout, cursor::MoveTo(0, 0)).unwrap();
 
         // write if paused
         if state.paused {
@@ -28,6 +29,6 @@ impl Tui {
             PomodoroPhase::LongBreak => println!("Long Break:")
         };
         
-        println!("{}:{}", state.remaining_time.as_secs() / 60, state.remaining_time.as_secs() % 60);
+        println!("{:02}:{:02}", state.remaining_time.as_secs() / 60, state.remaining_time.as_secs() % 60);
     }
 }

@@ -1,7 +1,7 @@
-use std::{io, sync::mpsc, thread::{self, sleep, JoinHandle}, time::Duration};
+use std::{io, sync::mpsc, time::Duration};
 
 use clap::Parser;
-use timer::Timer;
+use config::Config;
 
 use crate::event::Event;
 
@@ -9,6 +9,7 @@ mod cli;
 mod timer;
 mod event;
 mod tui;
+mod config;
 
 struct State {
     remaining_time: Duration,
@@ -24,10 +25,11 @@ enum PomodoroPhase {
 }
 
 fn main() {
-    let args = cli::Args::parse();
+    let _args = cli::Args::parse();
+    let config = Config::default();
 
     let mut state = State {
-        remaining_time: Duration::from_secs(15),
+        remaining_time: config.work_duration,
         pom_count: 0,
         pom_phase: PomodoroPhase::Work,
         paused: false
@@ -50,7 +52,7 @@ fn main() {
             Event::TimerTick => {
                 state.remaining_time -= Duration::from_secs(1);
                 if state.remaining_time.is_zero() {
-                    next_phase(&mut state);
+                    next_phase(&mut state, &config);
                 }
             }
         }
@@ -58,18 +60,22 @@ fn main() {
 }
 
 
-fn next_phase(state: &mut State) {
+fn next_phase(state: &mut State, config: &Config) {
     match state.pom_phase {
         PomodoroPhase::Work => {
             if state.pom_count == 4 {
                 state.pom_phase = PomodoroPhase::LongBreak;
-                state.remaining_time = Duration::from_secs(15);
+                state.remaining_time = config.long_break_duration;
             } else {
                 state.pom_phase = PomodoroPhase::Break;
-                state.remaining_time = Duration::from_secs(5);
+                state.remaining_time = config.short_break_duration;
             }
             state.pom_count += 1;
         },
-        PomodoroPhase::Break | PomodoroPhase::LongBreak => state.pom_phase = PomodoroPhase::Work,
+        PomodoroPhase::Break | PomodoroPhase::LongBreak => {
+            state.pom_phase = PomodoroPhase::Work;
+            state.remaining_time = config.work_duration;
+        }
     }
+    state.paused = true;
 }
