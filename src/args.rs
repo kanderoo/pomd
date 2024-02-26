@@ -20,5 +20,9 @@ pub struct Args {
 
     /// Disable desktop notifications
     #[arg(long)]
-    pub disable_notifications: bool
+    pub disable_notifications: bool,
+
+    /// Enable task logging functionality
+    #[arg(long)]
+    pub log: bool
 }

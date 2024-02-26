@@ -4,7 +4,6 @@ use app::App;
 use clap::Parser;
 use config::Config;
 use key_listener::KeyListener;
-use log::Logger;
 use tui::Tui;
 
 mod args;
@@ -15,21 +14,13 @@ mod config;
 mod key_listener;
 mod app;
 mod notification;
-mod log;
 
 fn main() {
     let args = args::Args::parse();
     let config = Config::from_args(args);
-    let logger = match Logger::new(&config.log_filepath) {
-        Ok(logger) => logger,
-        Err(e) => {
-            eprintln!("Cannot open log file! {}", e);
-            exit(-1);
-        }
-    };
     let (tx, rx) = mpsc::channel();
-
-    let mut app = App::new(config, logger);
+    
+    let mut app = App::new(config);
     let mut tui = match Tui::new(io::stdin(), io::stdout()) {
         Ok(tui) => tui,
         Err(e) => {

@@ -9,12 +9,17 @@ pub struct Config {
     pub poms_till_long_break: u8,
     pub notifications: bool,
     pub log_filepath: String,
+    pub logging: bool,
 }
 
 impl Config {
     // this is kinda terrible, there's probably a better way to do this.
     pub fn from_args(args: Args) -> Self {
-        let mut config = Self{ notifications: !args.disable_notifications, ..Default::default()};
+        let mut config = Self{
+            logging: args.log,
+            notifications: !args.disable_notifications,
+            ..Default::default()
+        };
 
         match args.pomodoro_length {
             Some(length) => config.work_duration = Duration::from_secs(length as u64 * 60), None => ()
@@ -45,6 +50,7 @@ impl Default for Config {
             poms_till_long_break: 4,
             notifications: true,
             log_filepath: "pomodoros.log".to_string(),
+            logging: false,
         }
     }
 }

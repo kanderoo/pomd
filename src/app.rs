@@ -1,8 +1,10 @@
-use std::io::Error;
+use std::fs::OpenOptions;
+use std::io::{Error, Write};
 use std::time::Duration;
 
+use chrono::Local;
+
 use crate::config::Config;
-use crate::log::Logger;
 use crate::notification::send_notification;
 
 pub enum PomodoroPhase {
@@ -25,12 +27,11 @@ pub struct App {
     pub pom_count: u8,
     pub paused: bool,
     pub config: Config,
-    pub logger: Logger,
     quit_flag: bool
 }
 
 impl App {
-    pub fn new(config: Config, logger: Logger) -> Self {
+    pub fn new(config: Config) -> Self {
         Self {
             mode: Mode::Timer,
             remaining_time: config.work_duration,
@@ -38,7 +39,6 @@ impl App {
             pom_phase: PomodoroPhase::Work,
             paused: true,
             config,
-            logger,
             quit_flag: false
         }
     }
@@ -65,7 +65,9 @@ impl App {
                 }
                 self.pom_count += 1;
                 // move to form mode to ask user what they accomplished
-                self.mode = Mode::Form;
+                if self.config.logging {
+                    self.mode = Mode::Form;
+                }
             },
             PomodoroPhase::ShortBreak => {
                 self.pom_phase = PomodoroPhase::Work;
@@ -98,7 +100,13 @@ impl App {
     }
     
     pub fn log(&mut self, description: &str) -> Result<(), Error> {
-        self.logger.log_pomodoro(description)
+        let mut file = OpenOptions::new().append(true).create(true).open(&self.config.log_filepath)?;
+
+        let now = Local::now();
+
+        writeln!(file, "{}: {}", now, description)?;
+
+        Ok(())
     }
     
     pub fn quit(&mut self) {
