@@ -1,6 +1,8 @@
+use std::io::Error;
 use std::time::Duration;
 
 use crate::config::Config;
+use crate::log::Logger;
 use crate::notification::send_notification;
 
 pub enum PomodoroPhase {
@@ -9,23 +11,34 @@ pub enum PomodoroPhase {
     LongBreak
 }
 
+pub enum Mode {
+    /// Standard mode where the timer is shown
+    Timer,
+    /// User input mode
+    Form
+}
+
 pub struct App {
+    pub mode: Mode,
     pub remaining_time: Duration,
     pub pom_phase: PomodoroPhase,
     pub pom_count: u8,
     pub paused: bool,
     pub config: Config,
+    pub logger: Logger,
     quit_flag: bool
 }
 
 impl App {
-    pub fn new(config: Config) -> Self {
+    pub fn new(config: Config, logger: Logger) -> Self {
         Self {
+            mode: Mode::Timer,
             remaining_time: config.work_duration,
             pom_count: 1,
             pom_phase: PomodoroPhase::Work,
             paused: true,
             config,
+            logger,
             quit_flag: false
         }
     }
@@ -40,7 +53,7 @@ impl App {
     }
 
     pub fn next_phase(&mut self) {
-        // there's a whole lotta "self" going on here
+        // there's a whole lotta "self" going on here, not sure if there's a syntax shortcut I'm missing out on
         match self.pom_phase {
             PomodoroPhase::Work => {
                 if self.pom_count == self.config.poms_till_long_break {
@@ -51,6 +64,8 @@ impl App {
                     self.remaining_time = self.config.short_break_duration;
                 }
                 self.pom_count += 1;
+                // move to form mode to ask user what they accomplished
+                self.mode = Mode::Form;
             },
             PomodoroPhase::ShortBreak => {
                 self.pom_phase = PomodoroPhase::Work;
@@ -80,6 +95,10 @@ impl App {
             PomodoroPhase::ShortBreak => self.remaining_time = self.config.short_break_duration,
             PomodoroPhase::LongBreak => self.remaining_time = self.config.long_break_duration,
         }
+    }
+    
+    pub fn log(&mut self, description: &str) -> Result<(), Error> {
+        self.logger.log_pomodoro(description)
     }
     
     pub fn quit(&mut self) {

@@ -7,7 +7,8 @@ pub struct Config {
     pub short_break_duration: Duration,
     pub long_break_duration: Duration,
     pub poms_till_long_break: u8,
-    pub notifications: bool
+    pub notifications: bool,
+    pub log_filepath: String,
 }
 
 impl Config {
@@ -42,7 +43,8 @@ impl Default for Config {
             short_break_duration: Duration::from_secs(60 * 5),
             long_break_duration: Duration::from_secs(60 * 30),
             poms_till_long_break: 4,
-            notifications: true
+            notifications: true,
+            log_filepath: "pomodoros.log".to_string(),
         }
     }
 }

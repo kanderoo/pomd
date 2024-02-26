@@ -45,7 +45,7 @@ impl EventHandler {
             Event::TimerTick => app.decrement_timer(),
             Event::KeyEvent(event) => {
                 Self::handle_key_event(event, app);
-            }
+            },
         }
         
         Ok(())
