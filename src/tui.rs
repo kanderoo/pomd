@@ -28,9 +28,9 @@ impl Tui {
         execute!(self.stdout, cursor::MoveTo(0, 1)).unwrap();
         // write state
         match app.pom_phase {
-            PomodoroPhase::Work => print!("🍅 Working ({}/{})", app.pom_count, app.config.poms_till_long_break),
-            PomodoroPhase::ShortBreak => print!("☕ Short Break"),
-            PomodoroPhase::LongBreak => print!("😴 Long Break")
+            PomodoroPhase::Work => print!("🍅  Working ({}/{})", app.pom_count, app.config.poms_till_long_break),
+            PomodoroPhase::ShortBreak => print!("☕  Short Break"),
+            PomodoroPhase::LongBreak => print!("😴  Long Break")
         };
         
         execute!(self.stdout, cursor::MoveTo(0, 2)).unwrap();
