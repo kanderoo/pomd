@@ -11,26 +11,26 @@ pub struct Config {
 
 impl Config {
     // this is kinda terrible, there's probably a better way to do this.
-    pub fn integrate_args(&mut self, args: Args) {
+    pub fn from_args(args: Args) -> Self {
+        let mut config = Self::default();
+
         match args.pomodoro_length {
-            Some(length) => self.work_duration = Duration::from_secs(length as u64 * 60),
-            None => ()
+            Some(length) => config.work_duration = Duration::from_secs(length as u64 * 60), None => ()
         }
 
         match args.short_break_length {
-            Some(length) => self.short_break_duration = Duration::from_secs(length as u64 * 60),
-            None => ()
+            Some(length) => config.short_break_duration = Duration::from_secs(length as u64 * 60), None => ()
         }
 
         match args.long_break_length {
-            Some(length) => self.long_break_duration = Duration::from_secs(length as u64 * 60),
-            None => ()
+            Some(length) => config.long_break_duration = Duration::from_secs(length as u64 * 60), None => ()
         }
 
         match args.sequence_count {
-            Some(count) => self.poms_till_long_break = count,
-            None => ()
+            Some(count) => config.poms_till_long_break = count, None => ()
         }
+        
+        config
     }
 }
 
