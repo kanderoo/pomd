@@ -1,6 +1,7 @@
 use std::time::Duration;
 
 use crate::config::Config;
+use crate::notification::send_notification;
 
 pub enum PomodoroPhase {
     Work,
@@ -59,6 +60,11 @@ impl App {
                 self.pom_phase = PomodoroPhase::Work;
                 self.remaining_time = self.config.work_duration;
                 self.pom_count = 1;
+            }
+        }
+        if self.config.notifications {
+            match send_notification(&self.pom_phase) {
+                Ok(_) => (), Err(e) => eprintln!("Can't send a notification: {}", e)
             }
         }
         self.paused = true;

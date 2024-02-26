@@ -1,18 +1,19 @@
 use std::time::Duration;
 
-use crate::cli::Args;
+use crate::args::Args;
 
 pub struct Config {
     pub work_duration: Duration,
     pub short_break_duration: Duration,
     pub long_break_duration: Duration,
-    pub poms_till_long_break: u8
+    pub poms_till_long_break: u8,
+    pub notifications: bool
 }
 
 impl Config {
     // this is kinda terrible, there's probably a better way to do this.
     pub fn from_args(args: Args) -> Self {
-        let mut config = Self::default();
+        let mut config = Self{ notifications: !args.disable_notifications, ..Default::default()};
 
         match args.pomodoro_length {
             Some(length) => config.work_duration = Duration::from_secs(length as u64 * 60), None => ()
@@ -40,7 +41,8 @@ impl Default for Config {
             work_duration: Duration::from_secs(60 * 25),
             short_break_duration: Duration::from_secs(60 * 5),
             long_break_duration: Duration::from_secs(60 * 30),
-            poms_till_long_break: 4
+            poms_till_long_break: 4,
+            notifications: true
         }
     }
 }

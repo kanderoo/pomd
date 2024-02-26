@@ -6,16 +6,17 @@ use config::Config;
 use key_listener::KeyListener;
 use tui::Tui;
 
-mod cli;
+mod args;
 mod timer;
 mod event;
 mod tui;
 mod config;
 mod key_listener;
 mod app;
+mod notification;
 
 fn main() {
-    let args = cli::Args::parse();
+    let args = args::Args::parse();
     let config = Config::from_args(args);
 
     let mut app = App::new(config);

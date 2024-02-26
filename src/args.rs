@@ -16,5 +16,9 @@ pub struct Args {
 
     /// How many pomodoros before a long break
     #[arg(short = 'c', long)]
-    pub sequence_count: Option<u8>
+    pub sequence_count: Option<u8>,
+
+    /// Disable desktop notifications
+    #[arg(long)]
+    pub disable_notifications: bool
 }
