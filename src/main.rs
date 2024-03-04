@@ -14,6 +14,7 @@ mod config;
 mod key_listener;
 mod app;
 mod notification;
+mod sound;
 
 fn main() {
     let args = args::Args::parse();

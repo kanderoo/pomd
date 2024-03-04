@@ -6,6 +6,7 @@ use chrono::Local;
 
 use crate::config::Config;
 use crate::notification::send_notification;
+use crate::sound::SoundHandler;
 
 pub enum PomodoroPhase {
     Work,
@@ -27,6 +28,7 @@ pub struct App {
     pub pom_count: u8,
     pub paused: bool,
     pub config: Config,
+    sound_handler: SoundHandler,
     quit_flag: bool
 }
 
@@ -39,6 +41,7 @@ impl App {
             pom_phase: PomodoroPhase::Work,
             paused: true,
             config,
+            sound_handler: SoundHandler::new(),
             quit_flag: false
         }
     }
@@ -53,6 +56,7 @@ impl App {
     }
 
     pub fn next_phase(&mut self) {
+        self.sound_handler.play_complete().unwrap();
         // there's a whole lotta "self" going on here, not sure if there's a syntax shortcut I'm missing out on
         match self.pom_phase {
             PomodoroPhase::Work => {
