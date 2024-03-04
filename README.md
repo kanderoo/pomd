@@ -19,6 +19,8 @@ Here it is in action:
 - [ ] Add database to task logging
 - [ ] Add Taskwarrior integration
 - [ ] Move to an async runtime
+- [ ] Make pomodoro complete sound user-configurable
+- [ ] Change logging format to JSON
 
 ## Architecture
 
