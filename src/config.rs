@@ -14,7 +14,8 @@ pub struct Config {
     pub notifications: bool,
     pub log_filepath: String,
     pub logging: bool,
-    pub pause_behavior: PauseBehavior
+    pub pause_behavior: PauseBehavior,
+    pub display_help_line: bool
 }
 
 #[derive(Serialize, Deserialize, ValueEnum, Clone)]
@@ -51,6 +52,10 @@ impl Config {
         if let Some(behavior) =  args.pause_behavior {
             self.pause_behavior = behavior;
         }
+
+        if args.no_help {
+            self.display_help_line = false;
+        }
     }
 }
 
@@ -64,7 +69,8 @@ impl Default for Config {
             notifications: true,
             log_filepath: "pomodoros.log".to_string(),
             logging: false,
-            pause_behavior: PauseBehavior::OnWork
+            pause_behavior: PauseBehavior::OnWork,
+            display_help_line: true
         }
     }
 }

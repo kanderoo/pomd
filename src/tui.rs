@@ -46,7 +46,10 @@ impl Tui {
         print!("{:02}:{:02}", app.remaining_time.as_secs() / 60, app.remaining_time.as_secs() % 60);
 
         execute!(self.stdout, cursor::MoveTo(0, 3))?;
-        print!("Press [q] to quit, [space] to pause/unpause, [>] to skip current phase, [<] to restart phase");
+
+        if app.config.display_help_line {
+            print!("Press [q] to quit, [space] to pause/unpause, [>] to skip current phase, [<] to restart phase");
+        }
 
         self.stdout.flush()?;
         Ok(())

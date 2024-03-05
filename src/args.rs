@@ -24,9 +24,13 @@ pub struct Args {
     #[arg(long)]
     pub disable_notifications: bool,
 
-    #[arg(long)]
     /// Change the pausing behavior
+    #[arg(long)]
     pub pause_behavior: Option<PauseBehavior>,
+
+    /// Don't display the keyboard shortcuts line
+    #[arg(long)]
+    pub no_help: bool,
 
     /// Enable task logging functionality
     #[arg(long)]
