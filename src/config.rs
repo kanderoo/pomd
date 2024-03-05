@@ -1,9 +1,11 @@
 use std::time::Duration;
+use serde::{Serialize, Deserialize};
 
 use clap::ValueEnum;
 
 use crate::args::Args;
 
+#[derive(Serialize, Deserialize)]
 pub struct Config {
     pub work_duration: Duration,
     pub short_break_duration: Duration,
@@ -15,7 +17,7 @@ pub struct Config {
     pub pause_behavior: PauseBehavior
 }
 
-#[derive(ValueEnum, Clone)]
+#[derive(Serialize, Deserialize, ValueEnum, Clone)]
 pub enum PauseBehavior {
     /// Autostart every timer
     Never,
@@ -29,34 +31,26 @@ pub enum PauseBehavior {
 
 impl Config {
     // this is kinda terrible, there's probably a better way to do this.
-    pub fn from_args(args: Args) -> Self {
-        let mut config = Self{
-            logging: args.log,
-            notifications: !args.disable_notifications,
-            ..Default::default()
-        };
-
-        match args.pomodoro_length {
-            Some(length) => config.work_duration = Duration::from_secs(length as u64 * 60), None => ()
+    pub fn integrate_args(&mut self, args: Args) {
+        if let Some(length) = args.pomodoro_length {
+            self.work_duration = Duration::from_secs(length as u64 * 60);
         }
 
-        match args.short_break_length {
-            Some(length) => config.short_break_duration = Duration::from_secs(length as u64 * 60), None => ()
+        if let Some(length) = args.short_break_length {
+            self.short_break_duration = Duration::from_secs(length as u64 * 60);
         }
 
-        match args.long_break_length {
-            Some(length) => config.long_break_duration = Duration::from_secs(length as u64 * 60), None => ()
+        if let Some(length) = args.long_break_length {
+            self.long_break_duration = Duration::from_secs(length as u64 * 60);
         }
 
-        match args.sequence_count {
-            Some(count) => config.poms_till_long_break = count, None => ()
+        if let Some(count) =  args.sequence_count {
+            self.poms_till_long_break = count;
         }
 
-        match args.pause_behavior {
-            Some(behavior) => config.pause_behavior = behavior, None => ()
+        if let Some(behavior) =  args.pause_behavior {
+            self.pause_behavior = behavior;
         }
-        
-        config
     }
 }
 

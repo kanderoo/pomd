@@ -17,8 +17,15 @@ mod notification;
 mod sound;
 
 fn main() {
-    let args = args::Args::parse();
-    let config = Config::from_args(args);
+    let mut config: Config = match confy::load("pomd", Some("config")) {
+        Ok(config) => config,
+        Err(e) => {
+            eprintln!("Cannot generate configuration! {}", e);
+            exit(-1);
+        }
+    };
+
+    config.integrate_args(args::Args::parse());
     let (tx, rx) = mpsc::channel();
     
     let mut app = App::new(config);

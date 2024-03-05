@@ -7,6 +7,8 @@ Here it is in action:
 
 ![](./resources/demo.gif)
 
+Configuration for `pomd` can be changed by editing `~/.config/pomd/config.toml` (managed by Confy). It will be automatically generated with default values when you run `pomd` for the first time.
+
 ## Features
 
 * Custom Work/Short Break/Long Break length support
@@ -14,9 +16,8 @@ Here it is in action:
 
 ## Roadmap
 
-- [ ] Add support for a persistant configuration file
+- [x] Add support for a persistant configuration file
 - [x] Add task logging
-- [ ] Add database to task logging
 - [ ] Add Taskwarrior integration
 - [ ] Move to an async runtime
 - [ ] Make pomodoro complete sound user-configurable
