@@ -16,6 +16,7 @@ pub enum PomodoroPhase {
     LongBreak
 }
 
+#[derive(PartialEq)]
 pub enum Mode {
     /// Standard mode where the timer is shown
     Timer,
@@ -48,15 +49,6 @@ impl App {
         }
     }
 
-    pub fn decrement_timer(&mut self) {
-        if !self.paused {
-            self.remaining_time -= Duration::from_secs(1);
-            if self.remaining_time.is_zero() {
-                self.next_phase();
-            }
-        }
-    }
-
     fn change_phase(&mut self) {
         // there's a whole lotta "self" going on here, not sure if there's a syntax shortcut I'm missing out on
         match self.pom_phase {
@@ -86,7 +78,22 @@ impl App {
         }
     }
 
+    pub fn handle_tick(&mut self) {
+        // check if timer should decrement
+        if self.mode == Mode::Timer && !self.paused {
+            self.remaining_time -= Duration::from_secs(1);
+            if self.remaining_time.is_zero() {
+                self.natural_next_phase();
+            }
+        }
+    }
+
     fn should_pause(&self) -> bool {
+        // if you're in the form view, you'd better pause
+        if self.mode == Mode::Form {
+            return true
+        }
+
         match self.config.pause_behavior {
             PauseBehavior::Always => true,
             PauseBehavior::Never => false,
@@ -95,7 +102,19 @@ impl App {
         }
     }
 
-    pub fn next_phase(&mut self) {
+    // Move to the next phase, assumes skip button pressed
+    // Will always pause, won't play a sound
+    pub fn skip_next_phase(&mut self) {
+        // change the state
+        self.change_phase();
+
+
+        // always pause
+        self.paused = true;
+    }
+
+    // Move to the next phase, assumes _timer rollover_
+    pub fn natural_next_phase(&mut self) {
         // change the state
         self.change_phase();
 
@@ -125,6 +144,7 @@ impl App {
             PomodoroPhase::ShortBreak => self.remaining_time = self.config.short_break_duration,
             PomodoroPhase::LongBreak => self.remaining_time = self.config.long_break_duration,
         }
+        self.paused = true;
     }
     
     pub fn log(&mut self, description: &str) -> Result<(), Error> {

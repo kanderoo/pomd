@@ -30,9 +30,8 @@ impl EventHandler {
             }
             KeyCode::Char('<') => {
                 app.reset_phase_timer();
-                app.paused = true;
             },
-            KeyCode::Char('>') => app.next_phase(),
+            KeyCode::Char('>') => app.skip_next_phase(),
             KeyCode::Char(' ') => app.toggle_pause(),
             _ => ()
         }
@@ -42,7 +41,7 @@ impl EventHandler {
         let event = self.rx.recv()?;
 
         match event {
-            Event::TimerTick => app.decrement_timer(),
+            Event::TimerTick => app.handle_tick(),
             Event::KeyEvent(event) => {
                 Self::handle_key_event(event, app);
             },

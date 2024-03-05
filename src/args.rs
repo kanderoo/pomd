@@ -16,7 +16,7 @@ pub struct Args {
     #[arg(short, long)]
     pub long_break_length: Option<u32>,
 
-    /// How many pomodoros before a long break
+    /// How many pomodoros before a longer break
     #[arg(short = 'c', long)]
     pub sequence_count: Option<u8>,
 
