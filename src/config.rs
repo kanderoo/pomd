@@ -1,5 +1,7 @@
 use std::time::Duration;
 
+use clap::ValueEnum;
+
 use crate::args::Args;
 
 pub struct Config {
@@ -10,6 +12,19 @@ pub struct Config {
     pub notifications: bool,
     pub log_filepath: String,
     pub logging: bool,
+    pub pause_behavior: PauseBehavior
+}
+
+#[derive(ValueEnum, Clone)]
+pub enum PauseBehavior {
+    /// Autostart every timer
+    Never,
+    /// Pause at the start of pomodoros
+    OnWork,
+    /// Pause at the start of breaks
+    OnBreak,
+    /// Pause at the start of every timer
+    Always
 }
 
 impl Config {
@@ -36,6 +51,10 @@ impl Config {
         match args.sequence_count {
             Some(count) => config.poms_till_long_break = count, None => ()
         }
+
+        match args.pause_behavior {
+            Some(behavior) => config.pause_behavior = behavior, None => ()
+        }
         
         config
     }
@@ -51,6 +70,7 @@ impl Default for Config {
             notifications: true,
             log_filepath: "pomodoros.log".to_string(),
             logging: false,
+            pause_behavior: PauseBehavior::OnWork
         }
     }
 }

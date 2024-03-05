@@ -1,5 +1,7 @@
 use clap::Parser;
 
+use crate::config::PauseBehavior;
+
 #[derive(Parser)]
 pub struct Args {
     /// Length for the pomodoro in minutes
@@ -21,6 +23,10 @@ pub struct Args {
     /// Disable desktop notifications
     #[arg(long)]
     pub disable_notifications: bool,
+
+    #[arg(long)]
+    /// Change the pausing behavior
+    pub pause_behavior: Option<PauseBehavior>,
 
     /// Enable task logging functionality
     #[arg(long)]

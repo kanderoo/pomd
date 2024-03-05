@@ -7,7 +7,9 @@ use chrono::Local;
 use crate::config::Config;
 use crate::notification::send_notification;
 use crate::sound::SoundHandler;
+use crate::config::PauseBehavior;
 
+#[derive(PartialEq)]
 pub enum PomodoroPhase {
     Work,
     ShortBreak,
@@ -55,8 +57,7 @@ impl App {
         }
     }
 
-    pub fn next_phase(&mut self) {
-        self.sound_handler.play_complete().unwrap();
+    fn change_phase(&mut self) {
         // there's a whole lotta "self" going on here, not sure if there's a syntax shortcut I'm missing out on
         match self.pom_phase {
             PomodoroPhase::Work => {
@@ -83,12 +84,35 @@ impl App {
                 self.pom_count = 1;
             }
         }
+    }
+
+    fn should_pause(&self) -> bool {
+        match self.config.pause_behavior {
+            PauseBehavior::Always => true,
+            PauseBehavior::Never => false,
+            PauseBehavior::OnWork => self.pom_phase == PomodoroPhase::Work,
+            PauseBehavior::OnBreak => self.pom_phase != PomodoroPhase::Work
+        }
+    }
+
+    pub fn next_phase(&mut self) {
+        // change the state
+        self.change_phase();
+
+        // play a sound
+        self.sound_handler.play_complete().unwrap();
+
+        // maybe pause
+        if self.should_pause() {
+            self.paused = true;
+        }
+
+        // notify
         if self.config.notifications {
             match send_notification(&self.pom_phase) {
                 Ok(_) => (), Err(e) => eprintln!("Can't send a notification: {}", e)
             }
         }
-        self.paused = true;
     }
     
     pub fn toggle_pause(&mut self) {
