@@ -27,14 +27,8 @@ impl Tui {
 
     fn display_timer(&mut self, app: &App) -> Result<(), Error> {
         execute!(self.stdout, terminal::Clear(terminal::ClearType::All))?;
+
         execute!(self.stdout, cursor::MoveTo(0, 0))?;
-
-        // write if paused
-        if app.paused {
-            print!("[ Paused ] ");
-        }
-
-        execute!(self.stdout, cursor::MoveTo(0, 1))?;
         // write state
         match app.pom_phase {
             PomodoroPhase::Work => print!("🍅 Working ({}/{})", app.pom_count, app.config.poms_till_long_break),
@@ -42,12 +36,17 @@ impl Tui {
             PomodoroPhase::LongBreak => print!("😴 Long Break")
         };
         
-        execute!(self.stdout, cursor::MoveTo(0, 2))?;
+        execute!(self.stdout, cursor::MoveTo(0, 1))?;
+
+        // write if paused
+        if app.paused {
+            print!("[ Paused ] ");
+        }
+
         print!("{:02}:{:02}", app.remaining_time.as_secs() / 60, app.remaining_time.as_secs() % 60);
 
-        execute!(self.stdout, cursor::MoveTo(0, 3))?;
-
         if app.config.display_help_line {
+            execute!(self.stdout, cursor::MoveTo(0, 2))?;
             print!("Press [q] to quit, [space] to pause/unpause, [>] to skip current phase, [<] to restart phase");
         }
 
@@ -92,7 +91,6 @@ impl Tui {
     
     pub fn cleanup(&self) -> Result<(), Error> {
         self.exit_rawmode()?;
-        println!("Goodbye!");
         
         Ok(())
     }
