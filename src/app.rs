@@ -5,7 +5,7 @@ use std::time::Duration;
 use chrono::Local;
 
 use crate::config::Config;
-use crate::notification::send_notification;
+use crate::notification::{send_phase_notification, send_reminder};
 use crate::sound::SoundHandler;
 use crate::config::PauseBehavior;
 
@@ -27,9 +27,10 @@ pub enum Mode {
 pub struct App {
     pub mode: Mode,
     pub remaining_time: Duration,
+    pub paused_time: Duration,
     pub pom_phase: PomodoroPhase,
     pub pom_count: u8,
-    pub paused: bool,
+    paused: bool,
     pub config: Config,
     sound_handler: SoundHandler,
     quit_flag: bool
@@ -45,6 +46,7 @@ impl App {
             paused: true,
             config,
             sound_handler: SoundHandler::new(),
+            paused_time: Duration::ZERO,
             quit_flag: false
         }
     }
@@ -80,7 +82,13 @@ impl App {
 
     pub fn handle_tick(&mut self) {
         // check if timer should decrement
-        if self.mode == Mode::Timer && !self.paused {
+        if self.paused {
+            self.paused_time += Duration::from_secs(1);
+            // send a reminder every 10 minutes
+            if self.paused_time.as_secs() % (10 * 60) == 0 {
+                send_reminder(&self.paused_time);
+            }
+        } else if self.mode == Mode::Timer {
             self.remaining_time -= Duration::from_secs(1);
             if self.remaining_time.is_zero() {
                 self.natural_next_phase();
@@ -102,15 +110,23 @@ impl App {
         }
     }
 
+    pub fn is_paused(&self) -> bool {
+        self.paused
+    }
+
+    fn pause(&mut self) {
+        self.paused = true;
+        self.paused_time = Duration::ZERO;
+    }
+
     // Move to the next phase, assumes skip button pressed
     // Will always pause, won't play a sound
     pub fn skip_next_phase(&mut self) {
         // change the state
         self.change_phase();
 
-
         // always pause
-        self.paused = true;
+        self.pause();
     }
 
     // Move to the next phase, assumes _timer rollover_
@@ -123,19 +139,21 @@ impl App {
 
         // maybe pause
         if self.should_pause() {
-            self.paused = true;
+            self.pause();
         }
 
         // notify
         if self.config.notifications {
-            match send_notification(&self.pom_phase) {
-                Ok(_) => (), Err(e) => eprintln!("Can't send a notification: {}", e)
-            }
+            send_phase_notification(&self.pom_phase);
         }
     }
     
     pub fn toggle_pause(&mut self) {
-        self.paused = !self.paused;
+        if !self.paused {
+            self.pause()
+        } else {
+            self.paused = false;
+        }
     }
     
     pub fn reset_phase_timer(&mut self) {

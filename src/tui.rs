@@ -39,7 +39,7 @@ impl Tui {
         execute!(self.stdout, cursor::MoveTo(0, 1))?;
 
         // write if paused
-        if app.paused {
+        if app.is_paused() {
             print!("[ Paused ] ");
         }
 
