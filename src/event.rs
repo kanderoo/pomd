@@ -32,7 +32,7 @@ impl EventHandler {
                 app.reset_phase_timer();
             },
             KeyCode::Char('>') => app.skip_next_phase(),
-            KeyCode::Char(' ') => app.toggle_pause(),
+            KeyCode::Char(' ') | KeyCode::Enter => app.toggle_pause(),
             _ => ()
         }
     }
