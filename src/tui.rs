@@ -27,26 +27,31 @@ impl Tui {
 
     fn display_timer(&mut self, app: &App) -> Result<(), Error> {
         execute!(self.stdout, terminal::Clear(terminal::ClearType::All))?;
-
-        execute!(self.stdout, cursor::MoveTo(0, 0))?;
-        // write state
-        match app.pom_phase {
-            PomodoroPhase::Work => print!("🍅 Working ({}/{})", app.pom_count, app.config.poms_till_long_break),
-            PomodoroPhase::ShortBreak => print!("☕ Short Break"),
-            PomodoroPhase::LongBreak => print!("😴 Long Break")
-        };
-        
-        execute!(self.stdout, cursor::MoveTo(0, 1))?;
+        let terminal_size = terminal::size()?;
+        let midpoint = (terminal_size.0 / 2, terminal_size.1 / 2);
 
         // write if paused
+        let paused_message = "[ Paused ]";
+        execute!(self.stdout, cursor::MoveTo(midpoint.0 - (paused_message.len() / 2) as u16, midpoint.1 - 2))?;
         if app.is_paused() {
-            print!("[ Paused ] ");
+            print!("{}", paused_message);
         }
 
-        print!("{:02}:{:02}", app.remaining_time.as_secs() / 60, app.remaining_time.as_secs() % 60);
+        // write state
+        let status_message = match app.pom_phase {
+            PomodoroPhase::Work => format!("🍅 Working ({}/{})", app.pom_count, app.config.poms_till_long_break),
+            PomodoroPhase::ShortBreak => "☕ Short Break".to_string(),
+            PomodoroPhase::LongBreak => "😴 Long Break".to_string()
+        };
+        execute!(self.stdout, cursor::MoveTo(midpoint.0 - (status_message.len() / 2) as u16, midpoint.1 - 1))?;
+        print!("{}", status_message);
+
+        let time_message = format!("{:02}:{:02}", app.remaining_time.as_secs() / 60, app.remaining_time.as_secs() % 60);
+        execute!(self.stdout, cursor::MoveTo(midpoint.0 - (time_message.len() / 2) as u16, midpoint.1))?;
+        print!("{}", time_message);
 
         if app.config.display_help_line {
-            execute!(self.stdout, cursor::MoveTo(0, 2))?;
+            execute!(self.stdout, cursor::MoveTo(midpoint.0, midpoint.1 + 1))?;
             print!("Press [q] to quit, [space] to pause/unpause, [>] to skip current phase, [<] to restart phase");
         }
 
