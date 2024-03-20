@@ -102,7 +102,9 @@ impl Tui {
         Ok(())
     }
     
-    pub fn cleanup(&self) -> Result<(), Error> {
+    pub fn cleanup(&mut self) -> Result<(), Error> {
+        execute!(self.stdout, terminal::Clear(terminal::ClearType::All))?;
+        execute!(self.stdout, cursor::MoveTo(0,0))?;
         self.exit_rawmode()?;
         
         Ok(())
