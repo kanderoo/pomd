@@ -8,6 +8,10 @@ pub struct Tui {
     stdin: Stdin,
 }
 
+fn get_x_offset(midpoint: (u16, u16), message: &str) -> u16 {
+    midpoint.0 - (message.chars().count() / 2) as u16
+}
+
 impl Tui {
     pub fn new(stdin: Stdin, stdout: Stdout) -> Result<Self, Error> {
         let mut tui = Self {
@@ -25,34 +29,38 @@ impl Tui {
         }
     }
 
+
     fn display_timer(&mut self, app: &App) -> Result<(), Error> {
         execute!(self.stdout, terminal::Clear(terminal::ClearType::All))?;
         let terminal_size = terminal::size()?;
         let midpoint = (terminal_size.0 / 2, terminal_size.1 / 2);
 
-        // write if paused
-        let paused_message = "[ Paused ]";
-        execute!(self.stdout, cursor::MoveTo(midpoint.0 - (paused_message.len() / 2) as u16, midpoint.1 - 2))?;
-        if app.is_paused() {
-            print!("{}", paused_message);
-        }
 
         // write state
-        let status_message = match app.pom_phase {
-            PomodoroPhase::Work => format!("🍅 Working ({}/{})", app.pom_count, app.config.poms_till_long_break),
-            PomodoroPhase::ShortBreak => "☕ Short Break".to_string(),
-            PomodoroPhase::LongBreak => "😴 Long Break".to_string()
+        let (symbol, status_message) = match app.pom_phase {
+            PomodoroPhase::Work => ("🍅 ",  format!("Working ({}/{})", app.pom_count, app.config.poms_till_long_break)),
+            PomodoroPhase::ShortBreak => ("☕ ", "Short Break".to_string()),
+            PomodoroPhase::LongBreak => ("😴 ", "Long Break".to_string())
         };
-        execute!(self.stdout, cursor::MoveTo(midpoint.0 - (status_message.len() / 2) as u16, midpoint.1 - 1))?;
+
+        // write if paused
+        execute!(self.stdout, cursor::MoveTo(get_x_offset(midpoint, &symbol) + 1, midpoint.1 - 2))?;
+        print!("{}", symbol);
+
+        execute!(self.stdout, cursor::MoveTo(get_x_offset(midpoint, &status_message), midpoint.1 - 1))?;
         print!("{}", status_message);
 
-        let time_message = format!("{:02}:{:02}", app.remaining_time.as_secs() / 60, app.remaining_time.as_secs() % 60);
-        execute!(self.stdout, cursor::MoveTo(midpoint.0 - (time_message.len() / 2) as u16, midpoint.1))?;
+        let mut time_message = format!("{:02}:{:02}", app.remaining_time.as_secs() / 60, app.remaining_time.as_secs() % 60);
+        if app.is_paused() {
+            time_message = "⏸️  ".to_string() + &time_message;
+        }
+        execute!(self.stdout, cursor::MoveTo(get_x_offset(midpoint, &time_message), midpoint.1))?;
         print!("{}", time_message);
 
         if app.config.display_help_line {
-            execute!(self.stdout, cursor::MoveTo(midpoint.0, midpoint.1 + 1))?;
-            print!("Press [q] to quit, [space] to pause/unpause, [>] to skip current phase, [<] to restart phase");
+            let help_message = "Press [q] to quit, [space] to pause/unpause, [>] to skip current phase, [<] to restart phase";
+            execute!(self.stdout, cursor::MoveTo(get_x_offset(midpoint, help_message), midpoint.1 + 1))?;
+            print!("{}", help_message);
         }
 
         self.stdout.flush()?;
